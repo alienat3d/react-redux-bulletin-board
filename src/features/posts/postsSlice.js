@@ -34,11 +34,12 @@ const postsSlice = createSlice({
   name: 'posts',
   initialState,
   reducers: {
-    // To add a post, we create a "postAdded" which will receive "state" and "action" with the payload (the text of the post). The payload will then be sent to the state. The 'createSlice' method in RTK uses another library, called 'immer', to manage immutability. So we can use the usual JS 'push' method, which is usually mutates an array its been used on.
+    // To add a post, we create a "postAdded" which will receive "state" and "action" with the payload (the text of the post). The payload will then be sent to the state. The 'createSlice' method in RTK uses another library, called 'immer', to manage immutability. So we can use the usual JS 'push' method, which is usually mutates an array it's been used on.
     postAdded: {
       reducer(state, action) {
         state.push(action.payload)
       },
+      // Instead of creating a new post object in the AddPostForm component, there is a better way to prepare the data. We can do this in the special "prepare" callback of the reducer in the slice like this:
       prepare(title, content, userId) {
         return {
           payload: {
