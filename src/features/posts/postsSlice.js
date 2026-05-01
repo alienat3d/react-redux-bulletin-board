@@ -68,6 +68,7 @@ const postsSlice = createSlice({
         };
       },
     },
+    // This function-reducer takes `state` and `payload` as arguments. It then extracts the name and ID of the emoji reaction from the payload and increments
     reactionAdded(state, action) {
       const {postId, reaction} = action.payload;
       const existingPost = state.find(post => post.id === postId);
