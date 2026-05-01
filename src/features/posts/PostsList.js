@@ -1,8 +1,8 @@
 import {useSelector} from "react-redux";
 import {selectAllPosts} from "./postsSlice";
-// import PostAuthor from "./PostAuthor";
-// import TimeAgo from "./TimeAgo";
-// import ReactionButtons from "./ReactionButtons";
+import PostAuthor from "./PostAuthor";
+import TimeAgo from "./TimeAgo";
+import ReactionButtons from "./ReactionButtons";
 
 const PostsList = () => {
   // Getting all posts from Redux store with a selector selectAllPosts
@@ -18,10 +18,10 @@ const PostsList = () => {
       {/* If post is long, we'll limit the preview to 100 letters */}
       <p>{post.content.substring(0, 100)}</p>
       <p className="postCredit">
-        {/*<PostAuthor userId={post.userId}/>*/}
-        {/*<TimeAgo timestamp={post.date}/>*/}
+        <PostAuthor userId={post.userId}/>
+        <TimeAgo timestamp={post.date}/>
       </p>
-      {/*<ReactionButtons post={post}/>*/}
+      <ReactionButtons post={post}/>
     </article>
   ));
 
@@ -30,6 +30,6 @@ const PostsList = () => {
       <h2>Posts</h2>
       {renderedPosts}
     </section>
-  )
-}
+  );
+};
 export default PostsList;
