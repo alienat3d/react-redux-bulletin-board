@@ -148,4 +148,8 @@ export const getPostsError = (state) => state.posts.error;
 // Redux Toolkit creates actions automatically out of props names in reducers, so we just extract the names of them and import further to use elsewhere in our app
 export const {postAdded, reactionAdded} = postsSlice.actions;
 
+// 3.0 Let's transform our project into a multipage application, where each post will have its own page to show the entire post (not just an excerpt of that post as it's on the list of the posts page), defined by its own ID. For that purpose, we'll create a new selector here, that receives not only the state but a post id. And we're finding a specific post by its ID with a usual "find" JS-method comparing ID from argument with IDs in the items inside of posts array.
+// (Go to [src/features/posts/SinglePostPage.js])
+export const selectPostById = (state, postId) => state.posts.posts.find(post => post.id === postId);
+
 export default postsSlice.reducer;
