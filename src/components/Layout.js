@@ -4,6 +4,7 @@ import {Outlet} from "react-router-dom";
 import Header from "./Header";
 
 // 3.8 We'll import and insert our new Header component here.
+// (Go to [src/features/posts/SinglePostPage.js])
 const Layout = () => {
   return (
     <>

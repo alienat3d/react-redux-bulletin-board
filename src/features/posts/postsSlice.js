@@ -2,25 +2,40 @@ import {createAsyncThunk, createSlice, nanoid} from "@reduxjs/toolkit";
 import axios from "axios";
 import {sub} from "date-fns";
 
-// We'll get data from a special fake API server service that emulates how a regular server API works.
 const POSTS_URL = "https://jsonplaceholder.typicode.com/posts/";
 
-// Redux does everything synchronously, so anything asynchronous has to happen outside the store. And this is where Redux middleware comes in and the most common async middleware is Redux thunk. Thunk is a recommended approach for writing async logic with Redux.
-// ? A word "thunk" means as a programming term — "a piece of code that does some delayed work".
-
-// The "createAsyncThunk" method of the Redux Toolkit accepts two arguments: 1) a prefix for the action type; 2) a payback creator callback. It returns either a promise with data or a rejected promise with an error. We use the axios library helper to request data from the URL and return it for processing.
 export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
   const response = await axios.get(POSTS_URL);
   return response.data;
 });
 
-// Let's create another async thunk-function to change the way how we add a new post. We'll put "initialPost" inside the callback as a thunk argument, which will be a post body request that we send with axios and then we return the response data.
 export const addNewPost = createAsyncThunk("posts/addNewPost", async (initialPost) => {
   const response = await axios.post(POSTS_URL, initialPost);
   return response.data;
 });
 
-// Let's rewrite the initialState, as previously it was static, but now we're going to receive it from an API server. So now "posts" is empty array, as we haven't hydrated. There will be a status property that indicates the current status of the request to the API server. This property is initially set to 'idle', but can also be set to other values (see the comment below). And we also have a prop 'error' to hold an error if we receive one.
+// 3.11.0 We have to add a thunk function for our new EditPostForm component to make changes to the store. We'll send in the initial post data. Then we destructuring and getting an ID from an initialPost, because we need to pass the ID in URL as we send this update to the API. We'll use HTTP-method "PUT" with "axios". And of course we're sending along that post data, as we're now putting data to update the existing post that has whatever ID that we pass into this URL. ↓
+export const updatePost = createAsyncThunk("posts/updatePost", async (initialPost) => {
+  const {id} = initialPost;
+  try {
+    const response = await axios.put(`${POSTS_URL}/${id}`, initialPost);
+    return response.data;
+  } catch (err) {
+    return err.message;
+  }
+});
+
+export const deletePost = createAsyncThunk("posts/deletePost", async (initialPost) => {
+  const {id} = initialPost;
+  try {
+    const response = await axios.delete(`${POSTS_URL}/${id}`);
+    if (response?.status === 200) return initialPost;
+    return `${response?.status}: ${response?.statusText}`;
+  } catch (err) {
+    return err.message;
+  }
+});
+
 const initialState = {
   posts: [],
   status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
@@ -31,19 +46,17 @@ const postsSlice = createSlice({
   name: "posts",
   initialState,
   reducers: {
-    // To add a post, we create a "postAdded" which will receive "state" and "action" with the payload (the text of the post). The payload will then be sent to the state. The 'createSlice' method in RTK uses another library, called 'immer', to manage immutability. So we can use the usual JS 'push' method, which is usually mutates an array it's been used on.
     postAdded: {
       reducer(state, action) {
         state.posts.push(action.payload);
       },
-      // Instead of creating a new post object in the AddPostForm component, there is a better way to prepare the data. We can do this in the special "prepare" callback of the reducer in the slice like this:
       prepare(title, content, userId) {
         return {
           payload: {
             id: nanoid(),
             title,
             content,
-            date: new Date().toISOString(), // Takes the current time in milliseconds and converts into a timestamp
+            date: new Date().toISOString(),
             userId,
             reactions: {
               thumbsUp: 0,
@@ -59,7 +72,6 @@ const postsSlice = createSlice({
         };
       },
     },
-    // This function-reducer takes `state` and `payload` as arguments. It then extracts the name and ID of the emoji reaction from the payload and increments
     reactionAdded(state, action) {
       const {postId, reaction} = action.payload;
       const existingPost = state.posts.find(post => post.id === postId);
@@ -68,23 +80,16 @@ const postsSlice = createSlice({
       }
     },
   },
-  // Sometimes a slice reducer needs to respond to other actions that weren't defined as part of the slice's reducers and that is kind of like what happens with async thunks. So we'll need to add an extraReducers function that is supported. It receives "a builder" parameter, and it's an object that lets us define additional case reducers that run in response to the actions defined outside the slice. So we're adding with special builder's method 'addCase' the cases are listening for the Promise status action types that are dispatched by the fetch posts thunk and then we respond by setting our state accordingly.
   extraReducers(builder) {
     builder
-      // if Promise 'pending' then we'll set status to 'loading'
       .addCase(fetchPosts.pending, (state) => {
         state.status = "loading";
       })
-      // if Promise 'fulfilled' then we'll set status to 'succeeded' but we're also return some data here.
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Adding date and reactions
-        // As the fake API we're using here doesn't have a couple of the areas of data that we need. We'll set one minute and then map over an array with the posts, that we get from 'action.payload'.
         let min = 1;
         const loadedPosts = action.payload.map(post => {
-          // We'll set the date with method 'sub' from library 'date-fns', what we're using and increasing the minutes for each post and in that way they won't have the same timestamp.
           post.date = sub(new Date(), {minutes: min++}).toISOString();
-          // We also have reactions those aren't coming from the API either, so we just needed to add those here and then we return that post.
           post.reactions = {
             thumbsUp: 0,
             wow: 0,
@@ -98,29 +103,19 @@ const postsSlice = createSlice({
           return post;
         });
 
-        // Add any fetched posts to the array
-        // We'll add those loaded posts to our state with method 'concat'. Now let's realize it's still inside the slice, which uses 'immer' library underneath the hood. So we can run methods like 'concat', that we wouldn't normally do, because it would mutate the state, but inside of method 'createSlice' with 'immer' lib that is how we do it and 'immer' handles it stays immutable.
         state.posts = state.posts.concat(loadedPosts);
       })
-      // Of course, we should also change the status of the "rejected" possibility here and write an error message to the state when we received it.
       .addCase(fetchPosts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
       })
-      // We also need a case for "addNewPost," which receives and saves the user ID to the store, generates a date, and adds reactions with a count of zero to each one manually. Then, we'll push everything to the payload object ("immer" will ensure that it remains an immutable operation).
       .addCase(addNewPost.fulfilled, (state, action) => {
-        // Fix for API post IDs:
-        // Creating sortedPosts & assigning the id
-        // would be not be needed if the fake API
-        // returned accurate new post IDs
         const sortedPosts = state.posts.sort((a, b) => {
           if (a.id > b.id) return 1;
           if (a.id < b.id) return -1;
           return 0;
         });
         action.payload.id = sortedPosts[sortedPosts.length - 1].id + 1;
-        // End fix for fake API post IDs
-
         action.payload.userId = Number(action.payload.userId);
         action.payload.date = new Date().toISOString();
         action.payload.reactions = {
@@ -133,19 +128,40 @@ const postsSlice = createSlice({
           laugh: 0,
           rolling: 0,
         };
-        console.log(action.payload);
         state.posts.push(action.payload);
+      })
+      // 3.11.1 And as we already know, async thunks should be handled with extraReducers. And it's slightly different to what we had before. We're getting some info back here with the action payload, but we could have a successful post essentially a post that is not rejected as a Promise, but it might not have a status "200" and it might not have completed the update. Say the server sends a status code "500" of an error. So we're going to check if payload has the ID property, and we're checking it with the optional chaining here with «?.». Then we'll log "Update could not complete" to console and then return the error message from a catch block of axios, so that's why it's "console.log(action.payload)" here too. But it still not be considered an error it would be considered fulfilled because axios still return that information. So what happens is we get our error message right here, and then we just return to in this.
+      .addCase(updatePost.fulfilled, (state, action) => {
+        if (!action.payload?.id) {
+          console.log("Update could not complete");
+          console.log(action.payload);
+          return;
+        }
+        // 3.11.2 If everything goes as planned we can destructure the ID from the action payload and we'll set a new date on the action payload.
+        const {id} = action.payload;
+        action.payload.date = new Date().toISOString();
+        // 3.11.3 Then we'll go ahead and filter out the previous post with the same ID, and then we can update our state with all previous posts and then of course pass in the new post.
+        // (Go to [src/features/posts/EditPostForm.js])
+        const posts = state.posts.filter(post => post.id !== id);
+        state.posts = [...posts, action.payload];
+      })
+      .addCase(deletePost.fulfilled, (state, action) => {
+        if (!action.payload?.id) {
+          console.log("Delete could not complete");
+          console.log(action.payload);
+          return;
+        }
+        const {id} = action.payload;
+        const posts = state.posts.filter(post => post.id !== id);
+        state.posts = posts;
       });
   },
 });
 
-// To make life easier, it's a good idea to create a selector inside the slice for this part of the store. This way, if something changes in our structure, we only need to change the path to it here. This avoids having to search everywhere in the app and change it.
 export const selectAllPosts = (state) => state.posts.posts;
-// We'll need some more of selectors here for the status and for an error.
 export const getPostsStatus = (state) => state.posts.status;
 export const getPostsError = (state) => state.posts.error;
 
-// Redux Toolkit creates actions automatically out of props names in reducers, so we just extract the names of them and import further to use elsewhere in our app
 export const {postAdded, reactionAdded} = postsSlice.actions;
 
 // 3.0 Let's transform our project into a multipage application, where each post will have its own page to show the entire post (not just an excerpt of that post as it's on the list of the posts page), defined by its own ID. For that purpose, we'll create a new selector here, that receives not only the state but a post id. And we're finding a specific post by its ID with a usual "find" JS-method comparing ID from argument with IDs in the items inside of posts array.

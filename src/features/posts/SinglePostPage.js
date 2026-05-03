@@ -29,6 +29,8 @@ const SinglePostPage = () => {
       <h2>{post.title}</h2>
       <p>{post.body}</p>
       <p className="postCredit">
+        {/* 3.9 Here we'll add a React Link to be able to go to the editing post page */}
+        {/* (Go to [src/features/posts/EditPostForm.js]) */}
         <Link to={`/post/edit/${post.id}`}>Edit Post</Link>
         <PostAuthor userId={post.userId}/>
         <TimeAgo timestamp={post.date}/>

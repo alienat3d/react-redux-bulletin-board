@@ -11,7 +11,7 @@ const PostExcerpt = ({post}) => {
       <p className="postCredit">
         {/* 3.6 Here we'll use Link to create a React Router link to the page of post's full view. */}
         {/* (Go to [src/components/Header.js]) */}
-        <Link to={`post/${post.id}`}>View Post</Link>
+        <Link to={`/post/${post.id}`}>View Post</Link>
         <PostAuthor userId={post.userId}/>
         <TimeAgo timestamp={post.date}/>
       </p>

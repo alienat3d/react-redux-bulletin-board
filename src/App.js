@@ -3,6 +3,7 @@ import AddPostForm from "./features/posts/AddPostForm";
 import {Route, Routes} from "react-router-dom";
 import Layout from "./components/Layout";
 import SinglePostPage from "./features/posts/SinglePostPage";
+import EditPostForm from "./features/posts/EditPostForm";
 
 // 3.4.0 Now let's apply routing from React Router here.
 function App() {
@@ -23,8 +24,10 @@ function App() {
           {/* 3.4.3 ":" at path means it's a dynamically changing path */}
           {/* (Go to [src/features/posts/SinglePostPage.js]) */}
           <Route path=":postId" element={<SinglePostPage/>}/>
+          {/* 3.13 Let's pull in here our edit form and apply the proper routing as well. */}
+          {/* (Go to [src/features/posts/postsSlice.js]) */}
+          <Route path="edit/:postId" element={<EditPostForm/>}/>
         </Route>
-
       </Route>
     </Routes>
   );
