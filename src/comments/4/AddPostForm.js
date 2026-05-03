@@ -6,6 +6,8 @@ import {selectAllUsers} from "../users/usersSlice";
 
 const AddPostForm = () => {
   const dispatch = useDispatch();
+
+  // 3.16.0 We'll add navigate here as well, ... ↓
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -31,6 +33,8 @@ const AddPostForm = () => {
         setTitle("");
         setContent("");
         setUserId("");
+        // 3.16.1 ... we want to bring user back to homepage, as we do by deleting post feature already.
+        // (Go to [src/index.js])
         navigate("/");
       } catch (err) {
         console.error("Failed to save the post", err);
@@ -38,6 +42,7 @@ const AddPostForm = () => {
         setAddRequestStatus("idle");
       }
     }
+
   };
 
   const usersOptions = users.map(user => (

@@ -1,11 +1,21 @@
+// 3.17.1 And then we can get rid of "useEffect", "useDispatch" hooks and "fetchPosts" thunk-func here.
+// import {useEffect} from "react";
 import {useSelector} from "react-redux";
 import {getPostsError, getPostsStatus, selectAllPosts} from "./postsSlice";
 import PostExcerpt from "./PostExcerpt";
 
 const PostsList = () => {
+  // const dispatch = useDispatch();
+
   const posts = useSelector(selectAllPosts);
   const status = useSelector(getPostsStatus);
   const error = useSelector(getPostsError);
+
+/*  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchPosts());
+    }
+  }, [status, dispatch]);*/
 
   let content;
   if (status === "loading") {
@@ -24,5 +34,4 @@ const PostsList = () => {
     </section>
   );
 };
-
 export default PostsList;
