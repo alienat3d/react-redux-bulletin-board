@@ -23,6 +23,8 @@ const usersSlice = createSlice({
 
 export const selectAllUsers = (state) => state.users;
 
+// 1.0 We'll create another selector to select a user by ID. This selector function retrieves the state and the user ID. Then, we'll use the "find" method on the users array, which returns the user if ID matches.
 export const selectUserById = (state, userId) => state.users.find(user => user.id === userId);
+// (Go to [src/features/users/UserPage.js])
 
 export default usersSlice.reducer;

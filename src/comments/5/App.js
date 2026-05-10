@@ -20,11 +20,16 @@ function App() {
           <Route path="edit/:postId" element={<EditPostForm/>}/>
         </Route>
 
+        {/* 1.2.0 We also need to add routes here for the users list page and the dynamically created individual user pages. */}
         <Route path="user">
           <Route index element={<UsersList/>}/>
           <Route path=":userId" element={<UserPage/>}/>
         </Route>
 
+        {/* 1.2.1 Besides that, let's also add a redirect to the homepage using "Navigate" since we don't have a "404 Error" page. However, we could replace it with the "404 Error" component if needed. */}
+        {/* ? 1.2.2 This 'catch-all' route essentially means 'direct it there if none of the above routes match the URL'. */}
+        {/* ? 1.2.3 A "replace" attribute here means that's going to replace the bad request whatever that address or page was that didn't exist is going to replace that in history with the good address that we're sending the user to. */}
+        {/* (Go to [src/features/posts/postsSlice.js]) */}
         <Route path="*" element={<Navigate to="/" replace/>}/>
       </Route>
     </Routes>
